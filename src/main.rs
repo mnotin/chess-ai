@@ -1,9 +1,38 @@
+#[derive(PartialEq)]
 enum Color {
     Black,
     White
 }
 
-#[derive(Debug)]
+struct Tile {
+    letter: char,
+    number: i32,
+}
+
+impl Tile {
+    fn new(letter: char, number: i32) -> Self {
+        Tile {
+            letter,
+            number
+        }
+    }
+}
+
+struct Move<'a> {
+    piece: &'a Piece<'a>,
+    tile: Tile,
+}
+
+impl <'a> Move<'a> {
+    fn new(piece: &'a Piece, tile: Tile) -> Self {
+        Move {
+            piece,
+            tile
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 enum PieceType {
     Pawn,
     Rook,
@@ -66,15 +95,15 @@ fn main() {
     let b_knight2 = Piece::new("BK2", PieceType::Knight, Color::Black);
     let b_tower2 = Piece::new("BT2", PieceType::Rook, Color::Black);
 
-    let board_piece: [[Option<Piece>; 8]; 8] = [
-        [Some(w_tower1), Some(w_knight1), Some(w_bishop1), Some(w_king), Some(w_queen), Some(w_bishop2), Some(w_knight2), Some(w_tower2)],
-        [Some(w_pawn1), Some(w_pawn2), Some(w_pawn3), Some(w_pawn4), Some(w_pawn5), Some(w_pawn6), Some(w_pawn7), Some(w_pawn8)],
+    let board_piece: [[Option<&Piece>; 8]; 8] = [
+        [Some(&w_tower1), Some(&w_knight1), Some(&w_bishop1), Some(&w_king), Some(&w_queen), Some(&w_bishop2), Some(&w_knight2), Some(&w_tower2)],
+        [Some(&w_pawn1), Some(&w_pawn2), Some(&w_pawn3), Some(&w_pawn4), Some(&w_pawn5), Some(&w_pawn6), Some(&w_pawn7), Some(&w_pawn8)],
         [None, None, None, None, None, None, None, None],
         [None, None, None, None, None, None, None, None],
         [None, None, None, None, None, None, None, None],
         [None, None, None, None, None, None, None, None],
-        [Some(b_pawn1), Some(b_pawn2), Some(b_pawn3), Some(b_pawn4), Some(b_pawn5), Some(b_pawn6), Some(b_pawn7), Some(b_pawn8)],
-        [Some(b_tower1), Some(b_knight1), Some(b_bishop1), Some(b_king), Some(b_queen), Some(b_bishop2), Some(b_knight2), Some(b_tower2)],
+        [Some(&b_pawn1), Some(&b_pawn2), Some(&b_pawn3), Some(&b_pawn4), Some(&b_pawn5), Some(&b_pawn6), Some(&b_pawn7), Some(&b_pawn8)],
+        [Some(&b_tower1), Some(&b_knight1), Some(&b_bishop1), Some(&b_king), Some(&b_queen), Some(&b_bishop2), Some(&b_knight2), Some(&b_tower2)],
         ];
     
     let board_color: [[Color; 8]; 8] = [
@@ -89,9 +118,10 @@ fn main() {
         ];
     
     display_board(&board_piece);
+    println!("{:?}", move_is_valid(&board_piece, Move::new(&w_pawn1, Tile::new('H', 3))));
 }
 
-fn display_board(board_piece: &[[Option<Piece>; 8]; 8]) {
+fn display_board(board_piece: &[[Option<&Piece>; 8]; 8]) {
     println!("---------------------------------");
     for i in 0..8 {
         print!("|");
@@ -110,4 +140,37 @@ fn display_board(board_piece: &[[Option<Piece>; 8]; 8]) {
 
 fn minmax() {
 
+}
+
+fn move_is_valid(board_piece: &[[Option<&Piece>; 8]; 8], player_move: Move) -> bool {
+    if player_move.piece.piece_type == PieceType::Pawn {
+        if player_move.piece.piece_color == Color::White {
+            if let Some(piece) = &board_piece[player_move.tile.number as usize - 2][letter_into_number(player_move.tile.letter)] {
+                piece.id == player_move.piece.id
+            } else {
+                // There is no piece on this tile
+                false
+            }
+        } else {
+            if let Some(piece) = &board_piece[player_move.tile.number as usize][letter_into_number(player_move.tile.letter)] {
+                piece.id == player_move.piece.id
+            } else {
+                // There is no piece on this tile
+                false
+            }
+        }
+    } else {
+        false
+    }
+}
+
+fn letter_into_number(letter: char) -> usize {
+    if letter == 'A' { 7 }
+    else if letter == 'B' { 6 }
+    else if letter == 'C' { 5 }
+    else if letter == 'D' { 4 }
+    else if letter == 'E' { 3 }
+    else if letter == 'F' { 2 }
+    else if letter == 'G' { 1 }
+    else { 0 } // H
 }
